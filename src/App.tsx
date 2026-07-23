@@ -1,121 +1,133 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
+import { BookSearch } from './components/BookSearch'
+import { CurrentBook } from './components/CurrentBook'
+import { EditPasswordPrompt } from './components/EditPasswordPrompt'
+import { useBookclub } from './hooks/useBookclub'
+import { isEditUnlocked, lockEditing } from './lib/appAuth'
+import { MEMBERS } from './lib/members'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [canEdit, setCanEdit] = useState(isEditUnlocked)
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false)
+  const [picking, setPicking] = useState(false)
+
+  const {
+    book,
+    ready,
+    error,
+    saving,
+    getRating,
+    saveRating,
+    saveChooserFields,
+    setActiveBook,
+  } = useBookclub(true)
+
+  useEffect(() => {
+    const sync = () => setCanEdit(isEditUnlocked())
+    window.addEventListener('bookclub-edit-unlock', sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener('bookclub-edit-unlock', sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+
+  function stopEditing() {
+    lockEditing()
+    setCanEdit(false)
+    setPicking(false)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+    <div className="app">
+      <header className="topbar">
+        <nav className="tabs" aria-label="Sections">
+          <button type="button" className="tabs__btn tabs__btn--active">
+            Current
+          </button>
+          <button type="button" className="tabs__btn" disabled title="Coming soon">
+            Archives
+          </button>
+        </nav>
+        {canEdit ? (
+          <button type="button" className="topbar__lock" onClick={stopEditing}>
+            Stop editing
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="topbar__lock"
+            onClick={() => setShowPasswordPrompt(true)}
+          >
+            Edit
+          </button>
+        )}
+      </header>
+
+      <main className="main">
+        {error ? (
+          <p className="banner banner--error" role="alert">
+            {error}
           </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        ) : null}
 
-      <div className="ticks"></div>
+        {!ready ? <p className="muted center">Loading…</p> : null}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {ready && picking && canEdit ? (
+          <BookSearch
+            defaultChooser={book?.chooser ?? MEMBERS[0]}
+            busy={saving}
+            onCancel={() => setPicking(false)}
+            onPick={async (hit, chooser) => {
+              await setActiveBook({ hit, chooser })
+              setPicking(false)
+            }}
+          />
+        ) : null}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {ready && !picking && book ? (
+          <CurrentBook
+            book={book}
+            canEdit={canEdit}
+            saving={saving}
+            getRating={getRating}
+            onSaveRating={saveRating}
+            onSaveChooserFields={saveChooserFields}
+            onChangeBook={() => setPicking(true)}
+          />
+        ) : null}
+
+        {ready && !picking && !book ? (
+          <section className="empty">
+            <p className="brand">Bellefonte Cafe Book Club</p>
+            <h1>No active book yet</h1>
+            <p className="muted">
+              Unlock editing to pick the club&apos;s current read.
+            </p>
+            {canEdit ? (
+              <button type="button" className="btn" onClick={() => setPicking(true)}>
+                Pick a book
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setShowPasswordPrompt(true)}
+              >
+                Edit
+              </button>
+            )}
+          </section>
+        ) : null}
+      </main>
+
+      {showPasswordPrompt ? (
+        <EditPasswordPrompt
+          onClose={() => setShowPasswordPrompt(false)}
+          onUnlocked={() => setCanEdit(true)}
+        />
+      ) : null}
+    </div>
   )
 }
-
-export default App
