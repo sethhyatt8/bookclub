@@ -193,7 +193,6 @@ function CurrentBookEditor({
                 rows={3}
                 value={leastFavoriteCharacter}
                 disabled={saving}
-                placeholder="Who and why?"
                 onChange={(e) => setLeastFavoriteCharacter(e.target.value)}
               />
             </label>
@@ -221,7 +220,6 @@ function CurrentBookEditor({
                 rows={3}
                 value={endingOpinion}
                 disabled={saving}
-                placeholder="Why or why not?"
                 onChange={(e) => setEndingOpinion(e.target.value)}
               />
             </label>
@@ -232,7 +230,6 @@ function CurrentBookEditor({
                   key={i}
                   value={q}
                   disabled={saving}
-                  placeholder={`Question ${i + 1}`}
                   onChange={(e) => {
                     const next = [...questions]
                     next[i] = e.target.value
