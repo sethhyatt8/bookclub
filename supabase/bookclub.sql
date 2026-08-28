@@ -13,8 +13,10 @@ create table if not exists public.bookclub_books (
   status text not null default 'active'
     check (status in ('active', 'archived')),
   favorite_character text not null default '',
+  least_favorite_character text not null default '',
   meaningful_quote text not null default '',
   surprising_plot_point text not null default '',
+  ending_opinion text not null default '',
   discussion_questions text[] not null default '{}',
   started_at timestamptz not null default now(),
   archived_at timestamptz,

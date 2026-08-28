@@ -10,8 +10,10 @@ type Props = {
   onSaveRating: (member: Member, rating: number | null) => void
   onSaveChooserFields: (fields: {
     favorite_character: string
+    least_favorite_character: string
     meaningful_quote: string
     surprising_plot_point: string
+    ending_opinion: string
     discussion_questions: string[]
   }) => void
   onChangeBook: () => void
@@ -56,8 +58,12 @@ function CurrentBookEditor({
   onChangeBook,
 }: Props) {
   const [favoriteCharacter, setFavoriteCharacter] = useState(book.favorite_character)
+  const [leastFavoriteCharacter, setLeastFavoriteCharacter] = useState(
+    book.least_favorite_character ?? '',
+  )
   const [quote, setQuote] = useState(book.meaningful_quote)
   const [plotPoint, setPlotPoint] = useState(book.surprising_plot_point)
+  const [endingOpinion, setEndingOpinion] = useState(book.ending_opinion ?? '')
   const [questions, setQuestions] = useState(() =>
     normalizeQuestions(book.discussion_questions ?? []),
   )
@@ -73,8 +79,10 @@ function CurrentBookEditor({
   function saveNotes() {
     onSaveChooserFields({
       favorite_character: favoriteCharacter,
+      least_favorite_character: leastFavoriteCharacter,
       meaningful_quote: quote,
       surprising_plot_point: plotPoint,
+      ending_opinion: endingOpinion,
       discussion_questions: questions,
     })
   }
@@ -180,6 +188,16 @@ function CurrentBookEditor({
               />
             </label>
             <label className="field">
+              <span>Least favorite character</span>
+              <textarea
+                rows={3}
+                value={leastFavoriteCharacter}
+                disabled={saving}
+                placeholder="Who and why?"
+                onChange={(e) => setLeastFavoriteCharacter(e.target.value)}
+              />
+            </label>
+            <label className="field">
               <span>Meaningful quote</span>
               <textarea
                 rows={3}
@@ -195,6 +213,16 @@ function CurrentBookEditor({
                 value={plotPoint}
                 disabled={saving}
                 onChange={(e) => setPlotPoint(e.target.value)}
+              />
+            </label>
+            <label className="field">
+              <span>Did you like the ending?</span>
+              <textarea
+                rows={3}
+                value={endingOpinion}
+                disabled={saving}
+                placeholder="Why or why not?"
+                onChange={(e) => setEndingOpinion(e.target.value)}
               />
             </label>
             <fieldset className="field field--stack">
@@ -220,8 +248,13 @@ function CurrentBookEditor({
         ) : (
           <div className="chooser-view">
             <ChooserBlock label="Favorite character" value={book.favorite_character} />
+            <ChooserBlock
+              label="Least favorite character"
+              value={book.least_favorite_character ?? ''}
+            />
             <ChooserBlock label="Meaningful quote" value={book.meaningful_quote} quote />
             <ChooserBlock label="Surprising plot point" value={book.surprising_plot_point} />
+            <ChooserBlock label="Did you like the ending?" value={book.ending_opinion ?? ''} />
             <div>
               <h3>Discussion questions</h3>
               {filledQuestions.length === 0 ? (

@@ -12,8 +12,10 @@ export type BookRecord = {
   chooser: Member
   status: BookStatus
   favorite_character: string
+  least_favorite_character: string
   meaningful_quote: string
   surprising_plot_point: string
+  ending_opinion: string
   discussion_questions: string[]
   started_at: string
   archived_at: string | null

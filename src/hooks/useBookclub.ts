@@ -6,7 +6,10 @@ import type { BookRecord, BookSearchHit, RatingRecord } from '../types/bookclub'
 function schemaHint(message: string): string {
   const lower = message.toLowerCase()
   if (lower.includes('bookclub_books') || lower.includes('schema cache') || lower.includes('does not exist')) {
-    return 'Could not reach book club data. Run supabase/bookclub.sql in the Supabase SQL Editor.'
+    return 'Could not reach book club data. Run supabase/bookclub.sql (or add-chooser-fields.sql for updates) in the Supabase SQL Editor.'
+  }
+  if (lower.includes('least_favorite_character') || lower.includes('ending_opinion')) {
+    return 'Could not save chooser notes. Run supabase/add-chooser-fields.sql in the Supabase SQL Editor.'
   }
   return message
 }
@@ -113,8 +116,10 @@ export function useBookclub(enabled: boolean) {
 
   async function saveChooserFields(fields: {
     favorite_character: string
+    least_favorite_character: string
     meaningful_quote: string
     surprising_plot_point: string
+    ending_opinion: string
     discussion_questions: string[]
   }) {
     if (!book) return
@@ -130,8 +135,10 @@ export function useBookclub(enabled: boolean) {
         .from('bookclub_books')
         .update({
           favorite_character: fields.favorite_character.trim(),
+          least_favorite_character: fields.least_favorite_character.trim(),
           meaningful_quote: fields.meaningful_quote.trim(),
           surprising_plot_point: fields.surprising_plot_point.trim(),
+          ending_opinion: fields.ending_opinion.trim(),
           discussion_questions: questions,
           updated_at: new Date().toISOString(),
         })
